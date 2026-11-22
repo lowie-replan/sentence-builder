@@ -132,9 +132,9 @@ input:focus{outline:3px solid var(--accent);outline-offset:1px}
   var TABLE="sentence_builder_boards",BUCKET="sentence-images";
   function h(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
   function field(v,ph,cb){var i=h("input");i.type="text";i.value=v;i.placeholder=ph;i.oninput=function(){cb(i.value);save()};return i}
-  function say(t,lang){
+  function say(t,lang,queue){
     if(!window.speechSynthesis||!t)return;
-    speechSynthesis.cancel();
+    if(!queue)speechSynthesis.cancel();   // queue=true lets it speak after what is already playing
     var u=new SpeechSynthesisUtterance(t);u.lang=lang;u.rate=0.85;
     speechSynthesis.speak(u);
   }
@@ -393,6 +393,7 @@ input:focus{outline:3px solid var(--accent);outline-offset:1px}
   var idx=0,cur=null;
   function playable(){return stu().items.filter(ready)}
   function renderPlay(){
+    if(window.speechSynthesis)speechSynthesis.cancel();
     var list=playable();
     if(idx>=list.length)idx=0;
     var it=list[idx],w=words(it.s);
@@ -455,6 +456,7 @@ input:focus{outline:3px solid var(--accent);outline-offset:1px}
     var i=+slot.dataset.i;
     if(c.t.toLowerCase()===cur.words[i].toLowerCase()){
       slot.textContent=c.t;slot.classList.add("full");
+      say(c.t.replace(/[.,!?;:]+$/,""),"en-US");   // each correct word is spoken
       if(chipEl.parentNode)chipEl.parentNode.removeChild(chipEl);
       cur.filled++;
       if(cur.filled===cur.words.length)finish();
@@ -472,7 +474,7 @@ input:focus{outline:3px solid var(--accent);outline-offset:1px}
     $("fb").textContent=cur.mistakes?"🎉 Complete!":"🌟 Perfect! No mistakes!";$("fb").style.color="var(--ok)";
     $("pl").textContent=it.pl.trim()?"🇵🇱 "+it.pl:"🇵🇱 (no Polish translation written yet)";
     $("result").classList.add("on");
-    say(cur.words.join(" "),"en-US");
+    say(cur.words.join(" "),"en-US",true);   // then the whole sentence
   }
   $("again").onclick=function(){say(cur.words.join(" "),"en-US")};
   $("sayPl").onclick=function(){say(cur.it.pl,"pl-PL")};
